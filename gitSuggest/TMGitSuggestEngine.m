@@ -77,7 +77,6 @@
     if (self = [super init]) {
         repoCheckCount = 0;
         matchProgression = 0;
-       
     }
     
     return self;

@@ -21,7 +21,7 @@
 {
     // Insert code here to initialize your application
     
-    TMGitSuggestEngine *gEngine = [[TMGitSuggestEngine alloc] initWithUserName:@"cocos2d" andRepoName:@"cocos2d-iphone-extensions"];
+    [[TMGitSuggestEngine alloc] initWithUserName:@"cocos2d" andRepoName:@"cocos2d-iphone-extensions"];
     
 }
 
