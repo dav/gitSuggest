@@ -1,0 +1,4 @@
+build
+gitSuggest.xcodeproj/xcuserdata/*
+gitSuggest.xcodeproj/project.xcworkspace/xcuserdata/*.xcuserdatad/
+gitSuggest.xcodeproj/project.xcworkspace/contents.xcworkspacedata
