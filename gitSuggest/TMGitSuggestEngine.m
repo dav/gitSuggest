@@ -10,30 +10,7 @@
 #define kBgQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) //1
 #define kLatestKivaLoansURL @"https://api.github.com/repos/" //2
 
-@interface NSDictionary(JSONCategories)
-+(NSDictionary*)dictionaryWithContentsOfJSONURLString:(NSString*)urlAddress;
--(NSData*)toJSON;
-@end
 
-@implementation NSDictionary(JSONCategories)
-
-+(NSDictionary*)dictionaryWithContentsOfJSONURLString:(NSString*)urlAddress
-{
-    NSData* data = [NSData dataWithContentsOfURL: [NSURL URLWithString: urlAddress] ];
-    __autoreleasing NSError* error = nil;
-    id result = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
-    if (error != nil) return nil;
-    return result;
-}
-
--(NSData*)toJSON
-{
-    NSError* error = nil;
-    id result = [NSJSONSerialization dataWithJSONObject:self options:kNilOptions error:&error];
-    if (error != nil) return nil;
-    return result;    
-}
-@end
 
 @implementation TMGitSuggestEngine
 @synthesize tViewController;
@@ -51,10 +28,27 @@
 - (IBAction)submit:(id)sender {
     repoCheckCount = 0;
     matchProgression = 0;
-    NSArray *ar = [NSArray arrayWithArray:[self.gitAddress.stringValue pathComponents]];
+    NSString *trimmedString = [self.gitAddress.stringValue stringByTrimmingCharactersInSet:
+                               [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSArray *ar = [NSArray arrayWithArray:[trimmedString pathComponents]];
     NSLog(@"%@", ar);
-    self.repoName = [[ar objectAtIndex:3] stringByReplacingOccurrencesOfString:@".git" withString:@""];
-    self.userName   = [ar objectAtIndex:2]; 
+    
+    if (![(NSString *)[ar objectAtIndex:0] isEqualToString:@"https:"] ) {
+        NSString *newString = [NSString stringWithFormat:[@"https://" stringByAppendingFormat:trimmedString]];
+    
+        ar = [NSArray arrayWithArray:[newString pathComponents]];
+        ar = [NSArray arrayWithObjects:@"", @"", [[ar objectAtIndex:1] stringByReplacingOccurrencesOfString:@"git@github.com:" withString:@""],[ar objectAtIndex:2],  nil];
+        self.repoName = [[ar objectAtIndex:3] stringByReplacingOccurrencesOfString:@".git" withString:@""];
+        self.userName   = [ar objectAtIndex:2];
+
+    }
+    else {
+        self.repoName = [[ar objectAtIndex:3] stringByReplacingOccurrencesOfString:@".git" withString:@""];
+        self.userName   = [ar objectAtIndex:2];
+
+    }
+        
+    
     
     [self kickoffSuggestionEngine];
     [self.waitMessage setHidden:NO];
@@ -68,6 +62,8 @@
     self.repoWatchers = [[[NSMutableArray alloc] init] retain];
     self.bigRepoList = [[NSMutableArray alloc] init];
     self.repoDictWithAttributes = [[NSMutableDictionary alloc] init];
+    NSString *nString = [kLatestKivaLoansURL stringByAppendingFormat:@"%@/%@/watchers?per_page=100", self.userName, self.repoName];
+    NSLog(@"%@", nString);
     dispatch_async(kBgQueue, ^{
         NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:[kLatestKivaLoansURL stringByAppendingFormat:@"%@/%@/watchers?per_page=100", self.userName, self.repoName]]];
         [self performSelectorOnMainThread:@selector(fetchedData:) withObject:data waitUntilDone:YES];
